@@ -1,14 +1,19 @@
 import { test as baseTest } from "../fixtures/pom-fixture"
 import CommonUtils from "../utils/CommonUtils"
+import CommonApiUtils from "../utils/CommonApiUtils"
 
 type myCommonFixtureType = {
     commonUtils: CommonUtils
+    commonApiUtils: CommonApiUtils
 }
 
 export const test = baseTest.extend<myCommonFixtureType>({
     commonUtils: async ({}, use) => {
         use(new CommonUtils())
-    }
+    },
+    commonApiUtils: async ({request}, use) => {
+        use(new CommonApiUtils(request))
+    },
 })
 
 

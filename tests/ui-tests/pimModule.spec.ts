@@ -1,5 +1,5 @@
-import { test, expect } from "../fixtures/hooks-fixture"
-import pimModuleData from "../test-data/pimModule-data.json"
+import { test, expect } from "../../fixtures/hooks-fixture"
+import pimModuleData from "../../test-data/ui-data/pimModule-data.json"
 
 /*
 ALL TESTS REQUIRE THE SECRET KEY.  
@@ -32,4 +32,22 @@ test('[PIM] Verify that a new employee is successfully created under the PIM mod
         await pimPage.createNewEmployee(pimModuleData.firstName, pimModuleData.lastName);
         await expect(pimPage.newEmployeeHeading).toHaveText(`${pimModuleData.firstName} ${pimModuleData.lastName}`, { timeout: 20000 });
     });
+});
+
+
+test('id - 8 [Restful-Booker > Booking] Verify that the user is able to fetch all the booking IDs using GET API and receive valid response.', {
+    annotation: {
+        type: "Test Case Link",
+        description: "https://dev.azure.com/wishinfinite/wishinfinite/_workitems/edit/8"
+    },
+}, async ({ request }) => {
+    const bookingIdsResp = await request.get('booking');
+    const bookingIdsJsonResp = await bookingIdsResp.json();
+    console.log(bookingIdsJsonResp);
+    expect(bookingIdsResp.status()).toBe(200);
+    expect(bookingIdsResp.statusText()).toBe('OK');
+    // expect(bookingIdsResp.ok()).toBeTruthy();
+
+    //.headers() gives all headers, and ['header-name'] picks a specific one 'content-type'
+    expect(bookingIdsResp.headers()['content-type']).toBe('application/json; charset=utf-8');
 });

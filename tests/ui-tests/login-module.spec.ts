@@ -1,5 +1,5 @@
-import { test, expect } from "../fixtures/hooks-fixture"
-import loginModuleData from "../test-data/login-module-data.json" //loginModuleData is not actual name of file, alias
+import { test, expect } from "../../fixtures/hooks-fixture"
+import loginModuleData from "../../test-data/ui-data/login-module-data.json" //loginModuleData is not actual name of file, alias
 
 /*
 ALL TESTS REQUIRE THE SECRET KEY.  

@@ -12,7 +12,9 @@
     "demo_cr_all": "cross-env ENV_NAME=demo npx playwright test --project=chromium",
     "demo_cr_ui": "cross-env ENV_NAME=demo npx playwright test --project=firefox --ui",
     "demo_fr": "cross-env ENV_NAME=demo npx playwright test --project=firefox",
-    "uat_cr_hd": "cross-env ENV_NAME=demo npx playwright test --project=chromium --grep=@visual --headed"
+    "uat_cr_hd": "cross-env ENV_NAME=demo npx playwright test --project=chromium --grep=@visual --headed",
+    "demo_api": "cross-env  ENV_NAME=demo npx playwright test --project=APITest",
+    "demo_cr_ui_api": "cross-env ENV_NAME=demo npx playwright test --project=chromium --headed --project=APITest"
   },
   "keywords": [],
   "author": "",

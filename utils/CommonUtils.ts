@@ -27,13 +27,15 @@ export default class CommonUtils {
      * @returns encryptedData
      */
     public encryptedData(data: string) {
-        const encrptdData = cryptoJs.AES.encrypt(data, this.secretKey).toString() //secret key
+        const encrptdData = cryptoJs.AES.encrypt(data, this.secretKey).toString()
+        console.log({ encrptdData })
         return encrptdData;
     }
 
 
     public decryptedData(data: string) {
         const dcryptdData = cryptoJs.AES.decrypt(data, this.secretKey).toString(cryptoJs.enc.Utf8)
+        console.log({ dcryptdData })
         return dcryptdData
     }
 }
