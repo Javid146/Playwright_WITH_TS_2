@@ -14,7 +14,7 @@ type pomFixtureType = {
     pimPage: PIMPage
 }
 
-//use(): means reate LoginPage object using current browser page, then give that object to test so test can work with it
+//use(): means create LoginPage object using current browser page, then give that object to test so test can work with it
 export const test = baseTest.extend<pomFixtureType>({
 
     loginPage: async ({ page }, use) => {

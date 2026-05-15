@@ -7,6 +7,16 @@ type myCommonFixtureType = {
     commonApiUtils: CommonApiUtils
 }
 
+/*
+With <myCommonFixtureType> You are explicitly telling TypeScript: “These fixtures will exist and have these types”
+commonUtils: CommonUtils
+commonApiUtils: CommonApiUtils
+👉 These are custom classes, not simple values.
+
+🔍 When you can skip <Type>? If it’s simple:
+export const test = baseTest.extend({ value: async (_, use) => { await use("hello"); }});
+👉 TS infers "hello" → string
+*/
 export const test = baseTest.extend<myCommonFixtureType>({
     commonUtils: async ({}, use) => {
         use(new CommonUtils())

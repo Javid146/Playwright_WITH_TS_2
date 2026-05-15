@@ -1,19 +1,18 @@
-import { test, expect } from "../../fixtures/hooks-fixture"
+import { test } from "../../fixtures/hooks-fixture"
+import { expect } from "@playwright/test";
 import loginModuleData from "../../test-data/ui-data/login-module-data.json" //loginModuleData is not actual name of file, alias
 
 /*
 ALL TESTS REQUIRE THE SECRET KEY.  
-Set it in bash like: `SECRET_KEY=javid5`  
 
 You can then run the tests using either:  
-1. npm script from package.json, e.g.:  
-   `SECRET_KEY=javid5 npm run uat_cr_hd`  
-2. Direct Playwright command, e.g.:  
-   `SECRET_KEY=javid5 playwright test login-module.spec.ts`
-*/
+1. npm script from package.json, e.g.: 
+CMD:        set SECRET_KEY=javid5 && npm run uat_cr_hd //script run
+CMD:        set SECRET_KEY=javid5 && npx playwright test login-module.spec.ts
+Bash:       SECRET_KEY=javid5 npx playwright test login-module.spec.ts
+PWRSHL:     $env:SECRET_KEY="javid5"; npx playwright test login-module.spec.ts
 
 
-/* 
 This test overrides the saved browser state from global-setup.ts. 
 Normally, tests use the stored state to access the OrangeHRM site without logging in. 
 By clearing cookies and origins here, we ensure the login page is shown, 

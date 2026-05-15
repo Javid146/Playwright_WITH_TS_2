@@ -20,6 +20,7 @@ export default class commonApiUtils {
                 "password": apiPassword
             }
         });
+
         const createTokenJsonResp = await createTokenResponse.json()
         console.log({ createTokenJsonResp })
         return createTokenJsonResp.token

@@ -8,8 +8,7 @@ Flow of imports:
 2. /fixtures/common-fixtures imports from pom-fixture.ts.
 
 Result:
-- When this hooks-fixture.ts is imported into any test file, 
-  that test will have access to all fixture objects from:
+- When this hooks-fixture.ts is imported into any test file, that test will have access to all fixture objects from:
     - hooks-fixture.ts
     - common-fixtures.ts
     - pom-fixture.ts
@@ -51,5 +50,3 @@ export const test = baseTest.extend<hooksFixture>({
         await userPage.logoutUser();
     }
 })
-
-export { expect } from "@playwright/test"

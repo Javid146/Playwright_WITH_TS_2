@@ -4,12 +4,12 @@ export default class CommonUtils {
 
     private secretKey: string;
 
-    /* The constructor initializes the secret key from the environment variable so it’s available to all methods in this class. 
-        secret key will be provided in runtime. 
-        CMD: set SECRET_KEY=javid5 && npm run demo_cr
-        Powershell: $env:SECRET_KEY = "javid5"; npm run demo_cr
-        Bash: SECRET_KEY=javid5 npm run demo_cr  
-
+    /* 
+    The constructor initializes the secret key from the environment variable so it’s available to all methods in this class. 
+    secret key will be provided in runtime. 
+    CMD: set SECRET_KEY=javid5 && npm run demo_cr
+    Powershell: $env:SECRET_KEY = "javid5"; npm run demo_cr
+    Bash: SECRET_KEY=javid5 npm run demo_cr  
     */
     constructor() {
 
@@ -21,7 +21,7 @@ export default class CommonUtils {
         }
     }
 
-    /**
+    /*
      * Provides Encrypted data from String
      * @param data 
      * @returns encryptedData

@@ -3,7 +3,7 @@ import { test } from "../../fixtures/hooks-fixture"
 
 //as login server remembers login from same browser after first login with cred there is no need to use credentials for login. 
 //login is done with global-setup.ts file first time.
-//hooks are provided via hooks-fixture.ts file therefore this code is commented out. It just for reference
+//hooks are provided via hooks-fixture.ts file therefore this code is commented out. It is just for reference
 // test.beforeEach('BeforeEach Hook',async({page, loginPage}) => {
 //     await loginPage.goToOrangeHRm();
 //     await expect(page).toHaveTitle('OrangeHRM');

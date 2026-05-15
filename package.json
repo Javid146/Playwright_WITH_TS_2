@@ -8,7 +8,7 @@
     "dev_fr": "cross-env ENV_NAME=dev npx playwright test --project=firefox",
     "demo": "cross-env ENV_NAME=demo npx playwright test",
     "demo_cr": "cross-env ENV_NAME=demo npx playwright test login-module.spec.ts --project=chromium",
-    "demo_cr_lf": "cross-env ENV_NAME=demo npx playwright test login-module.spec.ts --project=chromium --last-falied",
+    "demo_cr_lf": "cross-env ENV_NAME=demo npx playwright test login-module.spec.ts --project=chromium --last-failed",
     "demo_cr_all": "cross-env ENV_NAME=demo npx playwright test --project=chromium",
     "demo_cr_ui": "cross-env ENV_NAME=demo npx playwright test --project=firefox --ui",
     "demo_fr": "cross-env ENV_NAME=demo npx playwright test --project=firefox",
@@ -22,7 +22,8 @@
   "description": "",
   "devDependencies": {
     "@eslint/json": "^0.13.1",
-    "@playwright/test": "^1.54.2",
+    "@playwright/test": "^1.60.0",
+    "@types/crypto-js": "^4.2.2",
     "@types/node": "^24.2.1",
     "globals": "^16.3.0",
     "typescript-eslint": "^8.39.1"
@@ -30,6 +31,7 @@
   "dependencies": {
     "cross-env": "^10.0.0",
     "crypto-js": "^4.2.0",
+    "csv-parse": "^6.2.1",
     "dotenv": "^17.2.1"
   }
 }
