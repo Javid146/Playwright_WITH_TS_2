@@ -120,6 +120,7 @@ test('slow in Safari', async ({ page, browserName }) => {
 //Declares a test step that is shown in the report.
 test('test', async ({ page }) => {
     await test.step('Log in', async () => {
+        await page.click('button');
     });
 
     await test.step('Outer step', async () => {

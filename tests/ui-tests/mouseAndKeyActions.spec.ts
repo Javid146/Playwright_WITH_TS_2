@@ -37,7 +37,7 @@ test('keys', async ({ page }) => {
     await page.getByRole('textbox').press('$');
 
     /*
-    other keys to press like'$' above:
+    other keys to press like '$' above:
     Backquote, Minus, Equal, Backslash, Backspace, Tab, Delete, Escape,
     ArrowDown, End, Enter, Home, Insert, PageDown, PageUp, ArrowRight,
     ArrowUp, F1 - F12, Digit0 - Digit9, KeyA - KeyZ, etc.
@@ -97,4 +97,8 @@ test('drag and drop', async ({ page }) => {
     await page.mouse.down();
     await page.locator('#item-to-drop-at').hover();
     await page.mouse.up();
+
+    //3. with dispatchEvent()
+    await page.locator("your locator").dispatchEvent('dragstart');
+    await page.locator("your locator").dispatchEvent('drop');
 })

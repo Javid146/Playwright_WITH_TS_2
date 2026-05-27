@@ -1,10 +1,9 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, chromium, firefox } from '@playwright/test';
 
 test('page.on() vs page.once()', async ({ page }) => {
     /*
      * on() and once() are methods inherited from Node.js EventEmitter.
-     * Playwright objects such as Page, Browser, BrowserContext, Request, etc.
-     * are event emitters.
+     * Playwright objects such as Page, Browser, BrowserContext, Request, etc. are event emitters.
      *
      * Common events:
      *   'load'        -> page finished loading
@@ -17,8 +16,7 @@ test('page.on() vs page.once()', async ({ page }) => {
      *
      * - Registers a persistent event listener.
      * - Fires EVERY time the page emits the 'load' event.
-     * - Stays active until removed manually with:
-     *     page.removeListener('load', handler)
+     * - Stays active until removed manually with page.removeListener('load', handler)
      * 
      * page.once('load', handler)
      * - Registers a one-time event listener.
@@ -59,7 +57,7 @@ test('locator handler with times and noWaitAfter', async ({ page }) => {
      * if (times: 1) is not added handler will handle "Cookie banner" each time it appears
      */
     await page.addLocatorHandler(
-        page.getByText('Cookie banner'),
+        page.getByText('Cookie banner'), //when cookie banner appears click below button
         async () => {
             await page.getByRole('button', { name: 'Accept cookies' }).click();
         },
@@ -163,7 +161,7 @@ test('highlight and hideHighlight example', async ({ page }) => {
  * It is useful when you need to:
  * - Access browser-only APIs (window, document, localStorage, sessionStorage)
  * - Read or modify global page state
- * - Execute custom logic that Playwright does not provide as an API
+ * - Executes custom logic that Playwright does not provide as an API
  *
  * It is NOT needed for normal test actions like clicking, typing, or reading text,
  * because Playwright locators already handle that in a safer and more stable way.
@@ -242,8 +240,10 @@ test('page.evaluate - localStorage', async ({ page }) => {
  *
  * Better alternatives (preferred in real tests):
  * - expect(locator).toBeVisible()
- * - locator.waitFor()
- * - page.waitForSelector()
+ * - locator.waitFor() -> e.g. await loginButton.waitFor();  
+ * - page.waitForSelector() -> e.g. await page.waitForSelector('#login-btn'); await page.waitForSelector('#login-btn', { state: 'attached' });
+ * no need for waitFor() and waitFor() in most cases. because page automatically waits for element to be interactable. 
+ * waitFor() and waitFor() generally for element to attach and exist in dom, not be visible or clickable.
  */
 test('waitForFunction - different real-world use cases', async ({ page }) => {
 
@@ -261,15 +261,14 @@ test('waitForFunction - different real-world use cases', async ({ page }) => {
 
 
     //2.
-    //Waiting for viewport. watch creates a Promise immediately, but you do not await it yet.
-    const watch = page.waitForFunction(() => window.innerWidth < 500);
+    //Waiting for viewport. watch creates a Promise immediately (like waitForFunction()), but you do not await it yet.
+    const watchViewPortChange = page.waitForFunction(() => window.innerWidth < 500);
 
     await page.setViewportSize({ width: 400, height: 800 });
 
     //wait for watch promise to fullfil 
-    await watch;
+    await watchViewPortChange;
     console.log('Viewport condition met');
-
 
     //3.
     //Keep checking 5 secs whether document.title === 'Ready'
@@ -294,21 +293,58 @@ test('page close event example', async ({ page }) => {
 });
 
 
-test('wait for page close', async ({ context, browser }) => {
+test('wait for page close', async ({ context }) => {
+  const page = await context.newPage();
+  await page.goto('https://example.com');
 
-    const page = await context.newPage();
-    await page.goto('https://example.com');
+  // page.waitForEvent('close') returns a Promise that resolves
+  // when this page (tab) is actually closed.
+  // We create the Promise BEFORE calling page.close().
+  const closePromise = page.waitForEvent('close');
 
-    // Start waiting BEFORE closing. page.waitForEvent('close') is promise
-    const closePromise = page.waitForEvent('close');
+  // Browser = entire browser process (Chrome, Firefox, etc.)
+  // Context = isolated browser session (like an incognito profile)
+  // Page = single browser tab
+  await page.close(); // closes only this tab
 
-    //browser=e.g chrome; page=tab; context=incognito profile / separate session
-    await page.close(); //closes the tab
-    await context.close(); //all pages inside are closed → triggers close
-    await browser.close(); //Everything closes (contexts + pages + browser itself) → triggers close
+  // Launch a separate Chromium browser manually.
+  const chromeBrowser = await chromium.launch();
 
-    await closePromise; // resolves when page is actually closed
-    console.log('Confirmed: page is closed');
+  // Create two isolated sessions (contexts) inside this Chromium browser.
+  const context2 = await chromeBrowser.newContext();
+  const context3 = await chromeBrowser.newContext();
+
+  // Create two tabs inside context2.
+  const page1 = await context2.newPage();
+  const page2 = await context2.newPage();
+
+  // context.close() closes:
+  // - all pages inside this context (page1 and page2)
+  // - cookies, localStorage, and session data for this context
+  await context2.close();
+
+  // Launch a separate Firefox browser manually.
+  const firefoxBrowser = await firefox.launch();
+
+  // IMPORTANT: newContext() returns a Promise, so it must be awaited.
+  const context4 = await firefoxBrowser.newContext();
+
+  // context4 stays open because we do not call:
+  // - await context4.close()
+  // - await firefoxBrowser.close()
+
+  // browser.close() closes:
+  // - all contexts in this browser (context2 and context3)
+  // - all pages inside those contexts
+  // - the browser process itself
+  await chromeBrowser.close();
+
+  // Wait until the original page close event is fully emitted.
+  await closePromise;
+  console.log('Confirmed: page is closed');
+
+  // Clean up Firefox browser to avoid leaving resources open.
+  await firefoxBrowser.close();
 });
 
 
@@ -335,7 +371,7 @@ test('popup (new tab) example', async ({ page }) => {
      * popup is now a FULL Page object (like "page")
      */
     const popup = await popupPromise;
-    await popup.waitForLoadState();
-    console.log('Popup URL:', await popup.url());
-    await popup.click('text=Login');
+    await popup.waitForLoadState(); //It waits until the page (popup tab) is considered fully loaded.
+    console.log('Popup URL:', popup.url());
+    await popup.locator('text=Login').click(); //popup is Page instance so acts like page.locator(). so this would work
 });

@@ -10,7 +10,7 @@ test.describe('orange tests', async () => {
         await page.getByRole('button', { name: 'Login' }).click();
     })
 
-    test('texts', async ({ page }) => {
+    test('innerText/textContent', async ({ page }) => {
 
         const locator = page.locator(".orangehrm-attendance-card-profile-record")
         const allInnerTexts = await locator.allInnerTexts() // returns visible (inner) text of each matched element (including all its descendants), respects css
@@ -28,6 +28,41 @@ test.describe('orange tests', async () => {
         const allTextContents = await locator2.allTextContents() //returns all visible inner text, also hidden hidden text, does not respect css, faster than allInnerTexts
         //e.g. allTextContents -> Assign LeaveLeave ListTimesheetsApply LeaveMy LeaveMy Timesheet
         console.log("allTextContents:" + allTextContents)
+    })
+
+
+    test('inner/outerHtml()', async ({ page }) => {
+
+        /*
+        <div id="box">
+            <span>Hello</span>
+            <button>Click</button>
+        </div>
+    
+        1. innerHtml() -> content inside the element
+        returns:
+        <span>Hello</span>
+        <button>Click</button>
+    
+        2. outerHTML() -> whole element including its own tags
+        returns:
+        <div id="box">
+            <span>Hello</span>
+            <button>Click</button>
+        </div>
+        */
+        const locator = page.locator('#box');
+        const innerHtml = await locator.innerHTML({ timeout: 5000 });
+        console.log(innerHtml)
+        expect(innerHtml).toContain('<span>Hello</span>');
+
+        const outerHtml = await locator.evaluate(el => el.outerHTML); //outerHTML can be achieved via evaluate only. 
+        console.log(outerHtml)
+        //innerHtml, outerHtml do not contain the CSS selector string #box. so expect(outerHtml).toContain('#box'); would fail
+        // they contain actual HTML markup
+        expect(outerHtml).toContain('id="box"');
+        expect(outerHtml).toContain('<div id="box">');
+        expect(outerHtml).toContain('<span>Hello</span>');
     })
 
 
@@ -59,7 +94,7 @@ test('frame - practice all methods', async ({ page }) => {
     const iframeElement = page.getByTitle("Web Table")
 
     // 2️⃣ Convert to Frame using contentFrame()
-    const frame = await iframeElement.contentFrame()
+    const frame = iframeElement.contentFrame()
 
     // 3️⃣ Assert iframe element exists (Locator assertion)
     await expect(iframeElement).toBeVisible()
@@ -93,7 +128,7 @@ test('shadow dom', async ({ page }) => {
 })
 
 
-test('describe', async ({ page }) => {
+test('locator describe', async ({ page }) => {
 
     //describe() the locator, description is used in the trace viewer and reports
     //description() returns previoulsy described locator 
@@ -107,7 +142,7 @@ test('dispatchEvent', async ({ page }) => {
     //dispatchEvent() fires JavaScript events directly — it’s powerful, but bypasses real user behavior, so use it only when needed
     await page.locator('#btn').dispatchEvent('click');
 
-    // await page.locator('#input').fill('Hello');
+    await page.locator('#input').fill('Hello');
     await page.locator('#input').dispatchEvent('change');
 
     await page.locator('#box').dispatchEvent('mouseover'); //similar to hover
@@ -122,6 +157,8 @@ test('dispatchEvent', async ({ page }) => {
     await page.locator('#container').dispatchEvent('wheel', { deltaY: 100 }); //down
     await page.locator('#container').dispatchEvent('wheel', { deltaY: -100 }); //up
 
+    await page.mouse.wheel(0, 10); //Real mouse wheel input. Scrolls element currently under mouse pointer
+
     //regular scroll (scroll from locator). use when: 👉 is there a scrollable div?
     await page.locator("locator").evaluate(e => e.scrollTop += 200); // always down
     await page.locator("locator").evaluate(e => e.scrollTop -= 200); // always up
@@ -129,7 +166,7 @@ test('dispatchEvent', async ({ page }) => {
 
     //scroll whole page not just container (from lspecified locator). use when: 👉 does the page itself scroll?
     await page.evaluate(() => window.scrollBy(0, 300));
-    await page.locator("").scrollIntoViewIfNeeded()
+    await page.locator("").scrollIntoViewIfNeeded() //recommended.
 })
 
 
@@ -169,23 +206,24 @@ test('attr, css, property', async ({ page }) => {
     */
     const locator = page.locator('#username');
 
-    await locator.getAttribute('type'); //returns string 
+    await locator.getAttribute('type'); //returns string. <input type="text">, <input type="password">
     await expect(locator).toHaveText("text")
     await expect(locator).toHaveAttribute('placeholder', 'Enter name');
+    await expect(await locator.getAttribute('aria-expanded')).toBe('true');
 
     const borderColor = await locator.evaluate(el => getComputedStyle(el).borderColor);
     expect(borderColor).toBe('rgb(255, 0, 0)');
 
     const locatorBorderColor = await locator.evaluate(el => getComputedStyle(el).borderColor); //computed style -> final, resolved style after CSS rules apply
     await expect(locatorBorderColor).toBeTruthy()
-    await expect(locator).toHaveCSS('color', 'rgb(255, 0, 0)');
+    await expect(locator).toHaveCSS('color', 'rgb(255, 0, 0)'); //better, auto-waits, flaky-safe, retries
 })
 
 
 test('press/pressSequentially', async ({ page }) => {
 
     await page.locator('#input').press('Enter');
-    await page.press('#firstName', 'Tab');
+    await page.press('#firstName', 'Tab'); //  jumps to second input like lastName
 
     //press ESC to close modal
     await page.press('body', 'Escape');
@@ -197,13 +235,13 @@ test('press/pressSequentially', async ({ page }) => {
     //key combin.
     await page.press('#input', 'Control+A'); // select all
     await page.press('#input', 'Control+C'); // copy
-    await page.press('#input', 'Control+V'); // paste
+    await page.press('#input2', 'Control+V'); // paste
 
     //single key click
     await page.press('#input', 'a');
     // await page.fill('#input', 'hello');  // faster for full typing
 
-    //delete
+    //delete text
     await page.press('#input', 'Backspace'); // deletes leftward
     await page.press('#input', 'Delete');    // deletes rightward
 
@@ -254,39 +292,4 @@ test('lists', async ({ page }) => {
     const count = await rows.count();
     for (let i = 0; i < count; ++i)
         console.log(await rows.nth(i).textContent());
-})
-
-
-test('inner/outerHtml()', async ({ page }) => {
-
-    /*
-    <div id="box">
-        <span>Hello</span>
-        <button>Click</button>
-    </div>
-
-    1. innerHtml() -> content inside the element
-    returns:
-    <span>Hello</span>
-    <button>Click</button>
-
-    2. outerHTML() -> whole element including its own tags
-    returns:
-    <div id="box">
-        <span>Hello</span>
-        <button>Click</button>
-    </div>
-    */
-    const locator = page.locator('#box');
-    const innerHtml = await locator.innerHTML({ timeout: 5000 });
-    console.log(innerHtml)
-    expect(innerHtml).toContain('<span>Hello</span>');
-
-    const outerHtml = await locator.evaluate(el => el.outerHTML);
-    console.log(outerHtml)
-    //innerHtml, outerHtml do not contain the CSS selector string #box. they contains actual HTML markup
-    expect(outerHtml).toContain('id="box"');
-    expect(outerHtml).toContain('<div id="box">');
-    expect(outerHtml).toContain('<span>Hello</span>');
-
 })

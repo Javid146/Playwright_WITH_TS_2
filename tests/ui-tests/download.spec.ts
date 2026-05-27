@@ -4,28 +4,29 @@ import fs from 'fs'
 // SECRET_KEY=javid5 npx playwright test download.spec.ts 
 test('download', async ({ page }) => {
 
-    await page.goto("https://demo.automationtesting.in/FileDownload.html")
+  await page.goto("https://demo.automationtesting.in/FileDownload.html")
 
-    // Start waiting for download before clicking. Note no await.
-    const downloadPromise = page.waitForEvent('download'); //no await because This does NOT wait immediately. It only starts a listener
-    // await page.getByRole('button', { name: 'Download' }).click();
-    await page.locator('xpath=//a[@href="https://github.com//sakinala/AutomationTesting/raw/master/samplefile.pdf"]').click();
-    const download = await downloadPromise; //waits here
+  // Start waiting for download before clicking. Note no await.
+  const downloadPromise = page.waitForEvent('download'); //no await because This does NOT wait immediately. It only starts a listener
+  // await page.getByRole('button', { name: 'Download' }).click();
+  await page.locator('xpath=//a[@href="https://github.com//sakinala/AutomationTesting/raw/master/samplefile.pdf"]').click();
+  const download = await downloadPromise; //waits here
 
-    // Wait for the download process to complete and save the downloaded file somewhere.
-    const filePath = 'tests/ui-tests/downloads/' + download.suggestedFilename();
-     const tempDownloadPath = await download.path() //file is downloaded to temp location by playwright
-    console.log("tempDownloadPath: " + tempDownloadPath)
+  // Wait for the download process to complete and save the downloaded file somewhere.
+  const filePath = 'tests/ui-tests/downloads/' + download.suggestedFilename();
+  const tempDownloadPath = await download.path() //Returns path of Playwright's temporary downloaded file
+  console.log("tempDownloadPath: " + tempDownloadPath)
 
-    await download.saveAs(filePath); //file is copied with saveAs() from temp folder file downloaded.
+  await download.saveAs(filePath); //file is copied with saveAs() from temp folder where file has been downloaded.
 
-    const failure = await download.failure();
-    console.log("failure: " + failure); //output: null -> success; string -> failure reason
+  const failure = await download.failure();
+  console.log("failure: " + failure); //output: null -> success; string -> failure reason
+  expect(await download.failure()).toBeNull(); //same as above, but with assertion. if null then download succeeded
 
-    expect(fs.existsSync(filePath)).toBeTruthy(); //fs -> file system
-    expect(download).toBeTruthy();
+  expect(fs.existsSync(filePath)).toBeTruthy(); //checks download was successfully saved via saveAs(). fs -> file system
+  expect(download.suggestedFilename()).toBe('report.pdf');
 
-    await download.delete(); //Playwright will automatically remove temporary download file. so this line is not needed usually
+  await download.delete(); //Playwright will automatically remove temporary download file. so this line is not needed usually
 })
 
 /*
@@ -79,7 +80,7 @@ test('download using page.on (listener)', async ({ page }) => {
    */
   page.on('download', async download => {
 
-    const filePath = `tests/downloads/${download.suggestedFilename()}`;
+    const filePath = `tests/downloads/${download.suggestedFilename()}`; //returns the filename that the server or browser suggests for the downloaded file
     await download.saveAs(filePath);
     downloadedFilePath = filePath;
   });
@@ -91,6 +92,5 @@ test('download using page.on (listener)', async ({ page }) => {
    * We must manually wait here because listener is async.
    */
   await page.waitForTimeout(1000);
-
   expect(fs.existsSync(downloadedFilePath!)).toBeTruthy();
 });

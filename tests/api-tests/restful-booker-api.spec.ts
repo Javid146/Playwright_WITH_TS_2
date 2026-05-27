@@ -41,25 +41,113 @@ test('[ GET ALL BOOKINGS ] Verify that the user is able to fetch all the booking
     type: "Test Case Link",
     description: "https://dev.azure.com/wishinfinite/wishinfinite/_workitems/edit/8"
   },
-}, async ({ request }) => {
-  const bookingIdsResp = await request.get(apiPathData.booking_path);
-  const bookingIdsJsonResp = await bookingIdsResp.json();
-  console.log(bookingIdsJsonResp);
-  expect(bookingIdsResp.status()).toBe(200);
-  expect(bookingIdsResp.statusText()).toBe('OK');
-  // expect(bookingIdsResp.ok()).toBeTruthy();
-  expect(bookingIdsResp.headers()['content-type']).toBe(restfulApiData.content_type);
-});
-
-
-test('[ GET BOOKING ] Verify that the user is able to fetch booking details for a booking id using GET API and receives', {
-  tag: ['@api', '@uat'],
-  annotation: {
-    type: "Test Case Link",
-    description: "https://dev.azure.com/wishinfinite/WishInfinite/_workitems/edit/9/"
+},
+  /*
+  { request } means Give me ONLY the request fixture from the full object. adding params in {} is called fixture destructuring.
+  
+    Think of Playwright like:
+    testContext = {
+    page,
+    request,
+    browser,
+    context
   }
-}, async ({ request }) => {
-  const bookingResp = await request.get(`${apiPathData.booking_path}/${restfulApiData.booking_id}`);
+  
+    async ({ request }) => {} gives only APIRequest context from testContext
+    async (request) => {} gives you entire test context object.
+  
+    if you do async ({ request }) => {}:
+    it is equivalent to:
+    test(async (fixtures) => {
+    fixtures.page
+    fixtures.request
+    fixtures.context
+  });
+  
+  👉 request here is just a variable name you chose
+  👉 it receives the entire test fixtures object. Which is incorrect saying “treat the whole fixtures object as a variable named request”.
+  
+  request fixture is just one property inside a shared test fixtures object (or test context). That's why we need to desctructure fixtures object and jsut fetch request using {}.
+  Think of it like:
+  
+  const car = {
+    engine,
+    wheels,
+    gps
+  };
+  
+  Then:
+  function drive(car) {}
+  
+  If you write:
+  function drive(engine) {}
+  You did NOT get engine — you got the whole car object.
+  */
+
+  async ({ request }) => {
+    const bookingIdsResp = await request.get(apiPathData.booking_path);
+    const bookingIdsJsonResp = await bookingIdsResp.json();
+    console.log(bookingIdsJsonResp);
+    expect(bookingIdsResp.status()).toBe(200);
+    expect(bookingIdsResp.statusText()).toBe('OK');
+
+    // response.ok() returns true if status is between 200–299
+    // toBeTruthy() passes if the value is true
+    expect(bookingIdsResp.ok()).toBeTruthy();
+
+    /*
+    In JavaScript objects, you can access properties in two ways:
+
+    1. Dot notation: obj.key
+
+    Is good for simple keys (no symbols, no spaces).
+    Header names contain a dash -, which is not valid in dot notation. e.g. response.headers() returns:
+    {
+    "content-type": "application/json",
+    "cache-control": "no-cache"
+    }
+    
+    response.headers().content-type ❌ invalid -> Because JavaScript interprets it as: headers().content - type ❌ (subtraction!)
+
+    2. Bracket notation: obj['key-name']
+    response.headers()['content-type'] ✅
+    */
+    expect(bookingIdsResp.headers()['content-type']).toBe(restfulApiData.content_type);
+  });
+
+
+//test without using tags and annotations
+test('[ GET BOOKING ] Verify that the user is able to fetch booking details for a booking id using GET API and receives', async ({ request }) => {
+  const bookingResp = await request.get(`${apiPathData.booking_path}/${restfulApiData.booking_id}`); //request -> Fixture API client
+
+  /*
+  bookingResp -> This is a Response object, not usable data. You can only do:
+  bookingIdsResp.status()
+  bookingIdsResp.headers()
+  bookingIdsResp.json()
+ 
+  bookingIdsResp.text() -> returns raw response as a string: {"bookings":[1,2,3]}, not like a json object. 
+  can manually convert it to json object: const data = JSON.parse(await bookingIdsResp.text())
+
+  You can NOT do:
+  bookingIdsResp.bookings ❌
+  bookingIdsResp[0] ❌
+
+  const data = await bookingIdsResp.json(); -> converts:
+  {
+  "bookings": [1, 2, 3]
+  }
+
+  into:
+
+  {
+  bookings: [1, 2, 3]
+  }
+
+  Now you can:
+  console.log(data.bookings);
+  expect(data.bookings.length).toBeGreaterThan(0);
+  */
   const bookingJsonResp = await bookingResp.json();
   console.log(bookingJsonResp);
 
@@ -68,16 +156,17 @@ test('[ GET BOOKING ] Verify that the user is able to fetch booking details for 
   expect(bookingResp).not.toBeNull();
 });
 
+
 /*
 head: similar to get(), but faster and returns only headers, status and cookies; so can't do response.text() or response.json();
 good to check if resource exists. get() returns full page data.
 */
 test('[ HEAD ]', async ({ playwright }) => {
-  const apiContext = await playwright.request.newContext({
+  const apiContext = await playwright.request.newContext({ //playwright.request.newContext -> A standalone API client. Manual API client
     baseURL: 'https://example.com',
   });
 
-  const res = await apiContext.head('/file.pdf');
+  const res = await apiContext.head('/file.pdf'); //apiContext can all so call get,post,put,patch,delete like request does.
   console.log(res.status());
   await apiContext.dispose();
 });
@@ -356,8 +445,7 @@ test('waitForRequest - verify API request is sent', async ({ page }) => {
 
   /**
    * Wait until the matching request is seen.
-   * This only confirms the request was sent,
-   * NOT that it succeeded.
+   * This only confirms the request was sent, NOT that it succeeded.
    */
   const request = await requestPromise;
   console.log('Request sent to:', request.url());
@@ -385,8 +473,7 @@ test('waitForResponse - verify API response is received', async ({ page }) => {
   /**
    * Wait for the server response to come back.
    * This confirms:
-   * - request was sent
-   * - server responded
+   * - request was sent, server responded
    * - response status is OK
    */
   const response = await responsePromise;
@@ -402,7 +489,7 @@ test('request.failure() example', async ({ page }) => {
    * - Works only for failed network requests.
    * - Returns:
    *     null              -> request succeeded
-   *     { errorText: ... } -> request failed
+   *    { errorText: ... } -> request failed
    */
 
   let failedRequestCaptured = false;
@@ -445,19 +532,27 @@ test('capture login API request payload (no UI)', async ({ page }) => {
   /*
    * page.route() intercepts network requests BEFORE they are sent to the server.
    *
-   * Pattern '/api/login' means:
-   * - match any domain
-   * - match any path ending with /api/login
+   * Pattern "** /api/login" means:
+   * - match any domain and any path ending with ** /api/login
    * This allows us to inspect, modify, block, or mock requests.
    */
   await page.route('**/api/login', async route => {
 
     /**
-     * route.request()
+     * route.request() -> allows inspecting the network layer behind UI actions.
+     * 
      * Gives access to the actual Request object (headers, URL, body, etc.)
+     * it lets you inspect what the frontend is actually sending. e.g.:
+     * {
+      "username": "testUser",
+      "password": "testPass123"
+      }
      */
     const request = route.request();
 
+    console.log('URL:', request.url());
+    console.log('Method:', request.method());
+    console.log('Headers:', request.headers());
     /**
      * request.postData()
      * Extracts the request body (payload) sent in POST request.
@@ -482,6 +577,23 @@ test('capture login API request payload (no UI)', async ({ page }) => {
   /**
    * Trigger a network request WITHOUT UI interaction.
    * This simulates frontend behavior using fetch().
+   * 
+   * we don't use data, but body instead for payload, because page.evaluate means code runs in browser context not in nodejs. This IS a real HTTP request.
+   * So it behaves like: a real user clicking UI and frontend JavaScript calling backend.
+   * and http request cannot send body as object. if we do not stringify call fails.
+   * Why JSON.stringify is needed?
+
+    It converts:
+    {
+      username: 'testUser',
+      password: 'testPass123'
+    }
+
+    into a string:
+    {"username":"testUser","password":"testPass123"}
+
+    🧠 2. request.fetch() in Playwright is ALSO a real HTTP request. But different layer:
+    👉 It is sent from Node.js (server-side test context), NOT from browser.
    */
   await page.evaluate(() => {
     fetch('/api/login', {
@@ -503,41 +615,26 @@ test('capture login API request payload (no UI)', async ({ page }) => {
 test('mock login API using route.fulfill()', async ({ page }) => {
 
   /**
-   * page.route()
+   * page.route() -> You’re testing UI behavior under controlled API conditions, not the real backend.
+   * Intercepts browser network requests BEFORE they reach backend.
    *
-   * WHY we need it:
-   * - It intercepts network requests BEFORE they reach the real backend
-   * - We use it to mock (fake) API responses
+   * Any frontend request to:
+   *    /api/login
    *
-   * In this case:
-   * - Any request matching '**/api / login'
-    * - will NOT go to the real server
-      * - instead, Playwright will handle it here
-        */
+   * will be intercepted by Playwright.
+   */
   await page.route('**/api/login', async route => {
 
     /**
      * route.fulfill()
      *
-     * WHY we use it:
-     * - It allows us to MOCK the server response completely
-     * - No real API call is made
-     *
-     * What happens here:
-     * - We STOP the real request from going to backend
-     * - We RETURN a fake response manually
-     *
-     * Think of it like:
-     * "Pretend the server replied with this data"
+     * Instead of contacting real backend, Playwright returns fake response immediately.
+     * Frontend thinks this is a real server response.
      */
     await route.fulfill({
-      status: 200, // HTTP status code returned to frontend
+      status: 200,
       contentType: 'application/json',
 
-      /**
-       * Fake response body sent back to the app
-       * This is what frontend receives as API response
-       */
       body: JSON.stringify({
         success: true,
         token: 'fake-jwt-token-123'
@@ -546,32 +643,71 @@ test('mock login API using route.fulfill()', async ({ page }) => {
   });
 
   /**
-   * page.request.post()
+   * Open login page in browser and log in
+   */
+  await page.goto('/login');
+  await page.fill('#username', 'testUser');
+  await page.fill('#password', 'testPass');
+
+  /**
+   * Click login button
+   * Frontend will internally do something like:
+   * fetch('/api/login')
+   * That request gets intercepted by page.route().
+   */
+  await page.click('button[type="submit"]');
+
+  /**
+   * UI assertion:
+   * Since mocked API returned: { success: true }, frontend should show successful login state.
+   */
+  await expect(page.locator('text=Logged in!')).toBeVisible();
+});
+
+
+test('login via UI then use authenticated page.request', async ({ page }) => {
+
+  /**
+   * 1. REAL USER FLOW: login through UI
+   */
+  await page.goto('/login');
+  await page.fill('#username', 'testUser');
+  await page.fill('#password', 'testPass123');
+  await page.click('button[type="submit"]');
+
+  // Verify UI login succeeded
+  await expect(page.locator('text=Logged in!')).toBeVisible();
+
+  /**
+   * 2. NOW session is authenticated via UI (in browser context), so browser bound api request on Node.js side via page.request will work.
+   * (cookies / localStorage already set by UI login)
    *
-   * WHY we use it:
-   * - This sends an API request directly from Playwright (Node side)
+   * WHY we use: page.request.get() ?
+   * 
+   * - This sends an API request directly from Playwright (Node.js side)
    * - No UI interaction needed
    * - No browser execution needed (unlike page.evaluate)
    *
    * This simulates calling the login API
+   * why we don't use request.post instead of page.request.post() ?
+   * Because page.request is:
+  
+    Bound to the same browser context
+    Shares:
+    cookies, storage state
+    Useful when your API depends on logged-in session state in the browser
+  
+    Whereas global request:
+    Is completely separate
+    No cookies unless manually injected
+    More “pure API testing tool”
+  
+    Simple rule:
+    Use request → pure API tests (no browser dependency)
+    Use page.request → API calls that must match browser session state
    */
-  const response = await page.request.post('/api/login', {
-    data: {
-      username: 'testUser',
-      password: 'testPass123'
-    }
-  });
-
-  /**
-   * This is NOT real backend response.
-   * It is the MOCK response we defined in route.fulfill().
-   *
-   * So instead of hitting server, it returns:
-   * {
-   *   success: true,
-   *   token: 'fake-jwt-token-123'
-   * }
-   */
+  const response = await page.request.get('/api/profile');
+  expect(response.status()).toBe(200);
   const body = await response.json();
-  expect(body.success).toBe(true);
+  expect(body.username).toBe('testUser');
 });

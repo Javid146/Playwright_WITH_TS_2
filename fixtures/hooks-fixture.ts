@@ -15,32 +15,30 @@ Result:
 */
 
 type hooksFixture = {
-
-    gotoURL: any
-    logout: any
+    gotoURL: void
+    logout: void
 }
 
 export const test = baseTest.extend<hooksFixture>({
 
-/*
- * In Playwright fixtures, the position of `use()` decides what runs
- * before or after the test:
- *
- * - Code written BEFORE `await use()` is setup → it runs first,
- *   before the test body starts. (Example: navigate to a URL, log in, etc.)
- *
- * - The call to `await use()` tells Playwright:
- *   "now run the actual test code that depends on this fixture."
- *
- * - Code written AFTER `await use()` is teardown → it runs after
- *   the test body finishes. (Example: log out, clean up data, etc.)
- *
- * This way, fixtures can prepare the environment before the test
- * and clean up after the test automatically.
- */
+    /*
+     * In Playwright fixtures, the position of `use()` decides what runs
+     * before or after the test:
+     *
+     * - Code written BEFORE `await use()` is setup → it runs first,
+     *   before the test body starts. (Example: navigate to a URL, log in, etc.)
+     *
+     * - The call to `await use()` tells Playwright:
+     *   "now run the actual test code that depends on this fixture."
+     *
+     * - Code written AFTER `await use()` is teardown → it runs after
+     *   the test body finishes. (Example: log out, clean up data, etc.)
+     *
+     * This way, fixtures can prepare the environment before the test
+     * and clean up after the test automatically.
+     */
 
     gotoURL: async ({ loginPage }, use) => {
-
         await loginPage.goToOrangeHRm();
         await use()
     },

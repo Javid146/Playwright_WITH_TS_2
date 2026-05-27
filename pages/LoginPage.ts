@@ -18,7 +18,7 @@ export class LoginPage {
         this.loginBtn = page.getByRole('button', { name: 'Login' })
         this.invalidCredentialErrorPopup = page.getByRole("alert")
         this.userDropdown = page.locator("li.oxd-userdropdown")
-        this.logoutBtn = page.getByRole("link", {name: 'Logout'})
+        this.logoutBtn = page.getByRole("link", { name: 'Logout' })
     }
 
     async goToOrangeHRm() {

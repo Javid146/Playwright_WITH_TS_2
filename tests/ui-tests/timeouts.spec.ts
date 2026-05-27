@@ -17,13 +17,13 @@ expect: {
 });
 */
 
-//2.a. set up per test -> timeout for single action
+//2.a. set up during test -> timeout for single action
 test('basic test', async ({ page }) => {
     await page.goto('https://playwright.dev', { timeout: 30000 });
     await page.getByText('Get Started').click({ timeout: 10000 });
 });
 
-//2.b. set up per test -> timeout for single assertion
+//2.b. set up during test -> timeout for single assertion
 test('example', async ({ page }) => {
     const locator = page.getByAltText("locator")
     await expect(locator).toHaveText('hello', { timeout: 10_000 });

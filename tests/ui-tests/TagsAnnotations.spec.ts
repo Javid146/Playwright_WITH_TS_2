@@ -27,7 +27,6 @@ Because --grep searches test titles + describe blocks
 */
 test('fourth @fourth', async ({
 }) => {
-
     console.log("4th test")
 })
 
@@ -63,8 +62,17 @@ test.describe('separate test group', {
 });
 
 /*
-fixme() is conditional skip. isMobile === true test is skipped
-beforeEach() does not run if you run test with specific tag.
+test.fixme() is a conditional skip used for tests that are not ready or expected to fail.
+isMobile is a boolean fixture provided by Playwright test context.
+It tells whether the test is running in a mobile device emulation context.
+isMobile becomes true when the test runs in a project configured with a mobile device,
+for example: use: devices['iPhone 13'].
+When isMobile is true, test.fixme(isMobile, ...) will skip the test and mark it as "fixme".
+This does NOT depend on test or beforeEach being included in a project.
+It depends only on the runtime device configuration.
+In the example below, tests are skipped only when running on mobile devices, not on desktop browsers.
+
+beforeEach() might not run if you run test with specific tag.
 e.g. npx playwright test --grep @third -> beforeEach() below won't run. Because test that has @third tag is not in same group with below beforeEach().
 Hooks are not “tests”, so they don’t support tag, annotation.
 beforeEach() would only run it is in same describe block with tests that are included in --grep. e.g. 

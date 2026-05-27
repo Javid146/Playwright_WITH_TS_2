@@ -32,7 +32,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
 
   expect: { //this timeout is only for expect assertion
-    timeout: 10000
+    timeout: 10000,
   },
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
@@ -41,121 +41,123 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    headless: false
+    headless: false,
+    navigationTimeout: 1000, //exists inside use{} here
+    actionTimeout: 1000 //exists inside use{} here
   },
 
   // globalSetup: require.resolve('./tests/Practice/global-setup-all-browsers-non-spec.ts'), //same as global-login-setup2.spec.ts, but this is proper way. global setup should not be a test file (spec.ts)
   // globalTeardown: require.resolve('./tests/Practice/globalTeardown.ts'),
-    /* Configure projects for major browsers */
-    projects: [
-      // {
-      //   name: 'Login Setup',
-      //   testMatch: 'global-login-setup.spec.ts' //allows to access browser without login to site each time. Saves time for each test
-      // },
-      {
-        name: 'Global-Login',
-        testMatch: 'global-login-setup2.spec.ts'
-      },
-      {
-        name: 'chromium-login',
-        dependencies: ['Global-Login'],
-        testMatch: 'PracticeTest.spec.ts', //run test without global login setup to verify login behaviour
-        use: {
-          ...devices['Desktop Chrome'],
-          storageState: './playwright/auth/practiceAuth.json'
-        }
-      },
-      {
-        name: 'tags_annotations',
-        testMatch: 'TagsAnnotations.spec.ts',
-      },
-      {
-        name: 'general_tests',
-        testMatch: 'assertions.spec.ts',
-        testDir: './tests/ui-tests'
-      },
-      {
-        name: 'csv read',
-        testMatch: 'CSVRead.spec.ts',
-      },
-      {
-        name: 'alerts',
-        testMatch: 'alerts.spec.ts',
-        testDir: './tests/ui-tests'
-      },
-      {
-        name: 'download',
-        testMatch: 'download.spec.ts',
-        testDir: './tests/ui-tests'
-      },
-      // {
-      //   name: 'chromium-login',
-      //   testMatch: 'login-module.spec.ts', //run test without global login setup to verify login behaviour
-      //   // dependencies: ['Global-Login'],
-      //   use: {
-      //     ...devices['Desktop Chrome'],
-      //     storageState: './playwright/auth/auth.json'
-      //     // storageState: undefined
-      //   }
-      // },
-      // {
-      //   name: 'chromium-login-practice',
-      //   testDir: './tests/Practice',
-      //   testMatch: 'practiceOrange.spec.ts', //run test without global login setup to verify login behaviour
-      //   use: {
-      //     ...devices['Desktop Chrome'],
-      //     storageState: undefined
-      //   }
-      // },
-      // {
-      //   name: 'firefox',
-      //   dependencies: ['Login Setup'],
-      //   use: {
-      //     ...devices['Desktop Firefox'],
-      //     storageState: './playwright/auth/auth.json'
-      //   },
-      // },
-      {
-        name: 'APITest',
-        testDir: './tests/api-tests',
-        use: {
-          baseURL: process.env.API_BASE_URL,
-          extraHTTPHeaders: {
-            Accept: 'application/json',
-            'Content-Type': 'application/json',
-            // "Authorization": "Basic YWRtaW46cGFzc3dvcmQxMjM="
-          }
+  /* Configure projects for major browsers */
+  projects: [
+    // {
+    //   name: 'Login Setup',
+    //   testMatch: 'global-login-setup.spec.ts' //allows to access browser without login to site each time. Saves time for each test
+    // },
+    {
+      name: 'Global-Login',
+      testMatch: 'global-login-setup2.spec.ts'
+    },
+    {
+      name: 'chromium-login',
+      dependencies: ['Global-Login'],
+      testMatch: 'PracticeTest.spec.ts', //run test without global login setup to verify login behaviour
+      use: {
+        ...devices['Desktop Chrome'],
+        storageState: './playwright/auth/practiceAuth.json'
+      }
+    },
+    {
+      name: 'tags_annotations',
+      testMatch: 'TagsAnnotations.spec.ts',
+    },
+    {
+      name: 'general_tests',
+      testMatch: 'assertions.spec.ts',
+      testDir: './tests/ui-tests'
+    },
+    {
+      name: 'csv read',
+      testMatch: 'CSVRead.spec.ts',
+    },
+    {
+      name: 'alerts',
+      testMatch: 'alerts.spec.ts',
+      testDir: './tests/ui-tests'
+    },
+    {
+      name: 'download',
+      testMatch: 'download.spec.ts',
+      testDir: './tests/ui-tests'
+    },
+    // {
+    //   name: 'chromium-login',
+    //   testMatch: 'login-module.spec.ts', //run test without global login setup to verify login behaviour
+    //   // dependencies: ['Global-Login'],
+    //   use: {
+    //     ...devices['Desktop Chrome'],
+    //     storageState: './playwright/auth/auth.json'
+    //     // storageState: undefined
+    //   }
+    // },
+    // {
+    //   name: 'chromium-login-practice',
+    //   testDir: './tests/Practice',
+    //   testMatch: 'practiceOrange.spec.ts', //run test without global login setup to verify login behaviour
+    //   use: {
+    //     ...devices['Desktop Chrome'],
+    //     storageState: undefined
+    //   }
+    // },
+    // {
+    //   name: 'firefox',
+    //   dependencies: ['Login Setup'],
+    //   use: {
+    //     ...devices['Desktop Firefox'],
+    //     storageState: './playwright/auth/auth.json'
+    //   },
+    // },
+    {
+      name: 'APITest',
+      testDir: './tests/api-tests',
+      use: {
+        baseURL: process.env.API_BASE_URL,
+        extraHTTPHeaders: {
+          Accept: 'application/json',
+          'Content-Type': 'application/json',
+          // "Authorization": "Basic YWRtaW46cGFzc3dvcmQxMjM="
         }
       }
+    }
 
-      // {
-      //   name: 'webkit',
-      // dependencies:['Setup'],
-      //   use: { ...devices['Desktop Safari'],
-      //         storageState: './playwright/auth/auth.json'
-      //  },
-      // },
+    // {
+    //   name: 'webkit',
+    // dependencies:['Setup'],
+    //   use: { ...devices['Desktop Safari'],
+    //         storageState: './playwright/auth/auth.json'
+    //  },
+    // },
 
-      /* Test against mobile viewports. */
-      // {
-      //   name: 'Mobile Chrome',
-      //   use: { ...devices['Pixel 5'] },
-      // },
-      // {
-      //   name: 'Mobile Safari',
-      //   use: { ...devices['iPhone 12'] },
-      // },
+    /* Test against mobile viewports. */
+    // {
+    //   name: 'Mobile Chrome',
+    //   use: { ...devices['Pixel 5'] },
+    // },
+    // {
+    //   name: 'Mobile Safari',
+    //   use: { ...devices['iPhone 12'] },
+    // },
 
-      /* Test against branded browsers. */
-      // {
-      //   name: 'Microsoft Edge',
-      //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-      // },
-      // {
-      //   name: 'Google Chrome',
-      //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-      // },
-    ],
+    /* Test against branded browsers. */
+    // {
+    //   name: 'Microsoft Edge',
+    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
+    // },
+    // {
+    //   name: 'Google Chrome',
+    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
+    // },
+  ],
 
   /* Run your local dev server before starting the tests */
   // webServer: {

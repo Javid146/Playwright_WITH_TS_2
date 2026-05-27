@@ -6,7 +6,7 @@ export class UserPage {
     readonly userDropdown: Locator
     readonly logout: Locator
 
-    constructor(page:Page) {
+    constructor(page: Page) {
 
         this.page = page
         this.userDropdown = page.locator(".oxd-userdropdown-tab")

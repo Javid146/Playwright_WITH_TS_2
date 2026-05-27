@@ -16,7 +16,7 @@ You can then run the tests using either:
 test('[PIM] Verify that a new employee is successfully created under the PIM module.', {
     tag: ['@dev', '@uat'],
     annotation: { //annot is used for linked issue and test-related details like qtest
-        type: 'Test Case Link',
+        type: 'Test Case Links',
         description: 'https://dev.azure.com/wishinfinite/WishInfinite/_workitems/edit/6/'
     }
 }, async ({ gotoURL, leftNavPage, pimPage }) => {
@@ -24,7 +24,7 @@ test('[PIM] Verify that a new employee is successfully created under the PIM mod
     // test.step() is similar to report.info(). It is used to describe steps of test in report in human readable way
     await test.step('Open PIM Module', async () => {
         await leftNavPage.openPIMLink();
-        await pimPage.addEmployee()
+        await pimPage.addEmployee() 
     });
 
     // Step 2: Add Employee in PIM Module

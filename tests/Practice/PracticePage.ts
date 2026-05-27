@@ -130,12 +130,20 @@ export class
 }
 
 /*
+
+🧠 Difference between name and hasText:
+Feature	        name	                hasText
+Works in	    getByRole()	            locator() / filter()
+Based on	    accessibility tree	    visible text
+
 getByRole() Role Mapping:
 
-HTML	    Role
-<header>	banner 👉 <header> becomes role="banner" <header> becomes role="banner" only if it is a top-level header for the page
+------------------
+| HTML	    Role |
+------------------
+--- <header>	banner -> <header> becomes page.getByRole('banner') only if it is a top-level header for the page
 That means: It’s not inside <section>, <article>, <main>, <nav>, <aside>, etc.
-<body><header>Main Header</header> </body>
+<body><header>Main Header</header></body>
 page.getByRole('banner') 
 If <header> is inside another section:
 <div>
@@ -143,42 +151,43 @@ If <header> is inside another section:
 </div>
 page.getByRole('banner') // ❌ won't find this
 page.getByText('Section Header')
-page.locator('div header').getByText('Section Header')
+or page.locator('div header').getByText('Section Header')
+or page.locator('div header', {hasText: 'Section Header'})
+or page.locator('div header').filter({hasText: 'Section Header'})
 
-<main>		main
+--- <main>		main
 
-<footer>	contentinfo
+--- <footer>	contentinfo
 <footer>© 2026 Company</footer>
 page.getByRole('contentinfo')
 page.locator('footer', { hasText: 'Company' })  //hasText behaves like contains
 page.getByRole('contentinfo').filter({ hasText: 'Company' })
 
-<nav>		navigation
+--- <nav>		navigation
 
-<section>	region (if labeled)
+--- <section>	region (if labeled)
 <section>
   <header>Section Header</header> <!-- ❌ NOT banner -->
 </section>
-page.getByRole('banner') // ❌ won't find this
 page.getByText('Section Header')
-const section = page.locator('section')
-section.getByText('Section Header')
+const section = page.locator('section').getByText('Section Header')
 
-<h1>–<h6>	heading
+--- <h1>–<h6>	heading
 page.getByRole('heading', { level: 1 }) h1
 page.getByRole('heading', { level: 2 }) h2
 
-<ul>		list
-<ol>		list
-<li>		listitem
+--- <ul>		list
+<ol>		    list
+<li>		    listitem
 page.locator('li', { hasText: 'PIM' })
 page.locator('li').nth(0)
 page.locator('li').first()
 page.locator('li').last()
 
-<table>		    table
-<tr>		    row
-<td>		    cell
+--- <table>		    table
+--- <tr>		    row
+--- <td>		    cell
+--- <th>            columnheader
 <table>
   <tr>
     <th>Name</th>
@@ -194,52 +203,52 @@ page.getByRole('row')
 page.getByRole('cell')
 page.getByRole('cell', { name: 'John' })   👉 Finds the <td> that contains “John”
 page.getByRole('row', { name: 'John 25' }) 👉 The “name” of a row is basically all text inside it combined
-🔹 Combine row + cell (very useful)
+Combine row + cell (very useful):
 const row = page.getByRole('row', { name: 'John' })
 await expect(row.getByRole('cell', { name: '25' })).toBeVisible()
-page.getByRole('columnheader', { name: 'Name' }) 👉 <th> → role = columnheader
+page.getByRole('columnheader', { name: 'Name' }) 
 
-<p>		    paragraph (rarely used in testing)
+--- <p>		    paragraph (rarely used in testing)
 
-<button>	button
+--- <button>	button
 page.getByRole('button', { name: 'Login' })
 page.getByRole('button', { name: 'Login', exact: true })
 page.getByRole('button', { pressed: true })
 page.getByRole('button', { expanded: true })
 page.getByRole('button', { name: 'Save', includeHidden: true })
 
-<a>		        link
-<dialog>	    dialog
-role="alert"	alert
+--- <a>		        link
+--- <dialog>	    dialog
+--- role="alert"	alert
 
-<input type="text">	textbox
+--- <input type="text">	textbox
 page.getByRole('textbox').filter({ hasText: 'Username' }) ❌ Won’t work for <input>
 Because <input> has no visible text node
 <input type="text" placeholder="Username" />
 page.getByPlaceholder('Username')
 
-<textarea>		textbox
+--- <textarea>		textbox
 <textarea>Enter your message</textarea>
 page.getByRole('textbox').filter({ hasText: 'Enter your message' })
 <textarea placeholder="Message"></textarea>
 page.getByPlaceholder('Message')
 
-<input type="password">	textbox
+--- <input type="password">	textbox
 page.getByRole('textbox') // only if it's the only one
 <label>Password</label>
 <input type="password"/>
 page.getByRole('textbox', { name: 'Password' })
 
-<input type="checkbox">	checkbox
+--- <input type="checkbox">	checkbox
 <input type="checkbox" />
 page.getByRole('checkbox')
 page.getByRole('checkbox').nth(0)
 page.locator('input\[type="checkbox"]')
 
-<input type="radio">	radio
+--- <input type="radio">	radio
 <input type="text" placeholder="Username" />
 
-<select>		combobox //means dropdown
+--- <select>		combobox //means dropdown
 <select><option>India</option></select>
 page.getByRole('combobox') 
 page.getByRole('combobox').selectOption('India');

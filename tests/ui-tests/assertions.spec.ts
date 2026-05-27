@@ -11,6 +11,7 @@ test('soft assertion', async ({ page }) => {
 })
 
 
+//custom message appears in Playwright reports and UI only when the assertion fails
 test('custom expect messages', async ({ page }) => {
     await expect(page.getByText('Name'), 'should be logged in').toBeVisible();
 })
@@ -49,13 +50,16 @@ Example:
 test('passes', async ({ database }) => {
   await expect(database).toHaveDatabaseUser('admin'); // custom matcher
 
+fixtures.ts:
 import { mergeTests, mergeExpects } from '@playwright/test';
 import { test as dbTest, expect as dbExpect } from 'database-test-utils';
 import { test as a11yTest, expect as a11yExpect } from 'a11y-test-utils';
 
+There is no practical built-in limit in Playwright. You can merge as many mergeExpects and mergeTests as you need.
 export const expect = mergeExpects(dbExpect, a11yExpect);
 export const test = mergeTests(dbTest, a11yTest);
 
+dbTest.spec.ts:
 import { test, expect } from './fixtures';
 
 test('passes', async ({ database }) => {
@@ -66,13 +70,14 @@ test('passes', async ({ database }) => {
 
 test('expect poll', async ({ page }) => {
 
+    //poll() repeatedly executes a function until returned value matches your expectation or timeout is reached.
     await expect.poll(async () => {
         const response = await page.request.get('https://api.example.com');
         return response.status();
     }, {
         // Custom expect message for reporting, optional.
         message: 'make sure API eventually succeeds',
-        // Poll for 10 seconds; defaults to 5 seconds. Pass 0 to disable timeout. 0 means unlimited wait
+        // Poll for 10 seconds; defaults to 5 seconds. Pass 0 to disable timeout. 0 means unlimited wait ( until default test timout expires)
         timeout: 10000,
     }).toBe(200);
 
@@ -81,7 +86,7 @@ test('expect poll', async ({ page }) => {
     await softExpect.poll(async () => {
         const response = await page.request.get('https://api.example.com');
         return response.status();
-    }, {}).toBe(200);
+    }).toBe(200);
 })
 
 

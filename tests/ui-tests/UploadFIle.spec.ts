@@ -40,8 +40,21 @@ test('upload 2', async ({ page }) => {
     const fileChooser = await fileChooserPromise;
 
     const input = fileChooser.element(); //It returns actual HTML input element that triggered dialog.
-  
-    expect(fileChooser.isMultiple()).toBeTruthy() //checks if this file upload input can upload multiple files
+
+    //expect(fileChooser.isMultiple()).toBeTruthy()
+    // .isMultiple() returns a boolean (true/false) indicating whether multiple file upload is allowed
+    // .toBeTruthy() is an assertion that PASSES if the value is truthy (true, non-zero, non-null)
+    // If the value is false, undefined, null, 0, or empty string, the test FAILS and throws an error
+    // IMPORTANT: toBeTruthy() does NOT return a boolean value — it only asserts condition
+
+    const canUploadMulti = fileChooser.isMultiple(); //checks if this file upload input can upload multiple files
+
+    if (canUploadMulti) {
+        await fileChooser.setFiles([
+            path.join(__dirname, 'myfile.pdf'),
+            path.join(__dirname, 'myfile2.pdf')
+        ]);
+    }
 
     await fileChooser.setFiles(path.join(__dirname, 'myfile.pdf')); //__dirname = absolute path of the current test file’s folder
 })

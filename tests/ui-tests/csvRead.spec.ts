@@ -1,11 +1,11 @@
-import fs from 'fs'; //fs mean file system
+import fs from 'fs'; //fs means file system
 import path from 'path';
 import { parse } from 'csv-parse/sync';
 import { test } from '@playwright/test';
 
 const filePath = path.resolve('test-data/ui-data/input.csv');
 
-const records = parse(fs.readFileSync(filePath, 'utf-8'), {
+const records : any = parse(fs.readFileSync(filePath, 'utf-8'), {
     columns: true,
     skip_empty_lines: true
 });

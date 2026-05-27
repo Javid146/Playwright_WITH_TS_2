@@ -38,20 +38,8 @@ test('pauseAt()', async ({ page }) => {
 })
 
 
-test('runFor()', async ({ page }) => {
-
-    //useful for testing UI features such as countdown, session timeout, otp expiration
-    await page.clock.install();
-    await page.goto('https://example.com'); // countdown starts at 10
-
-    await page.clock.runFor('10'); //like countdown 10,9,8 -> 0
-    await page.clock.runFor('10:00'); // run for 10 minutes
-    await expect(page.getByText('0')).toBeVisible();
-})
-
-
 /*
-await page.clock.install({ time: new Date('2025-12-31T23:59:50' )}); is exactly same as setSystemTime() with 1 step:
+await page.clock.install({ time: new Date('2025-12-31T23:59:50' )}); is exactly same as setSystemTime() but with 1 step:
 await page.clock.install();
 await page.clock.setSystemTime('2026-05-10T09:00:00');
 */
@@ -64,5 +52,17 @@ test('setSystemTime()', async ({ page }) => {
     await page.clock.setSystemTime('2026-05-10T09:00:00');
 
     // later reset back to real time
+    await page.clock.install({ time: new Date() });
+})
+
+
+test('runFor()', async ({ page }) => {
+
+    //useful for testing UI features such as countdown, session timeout, otp expiration
     await page.clock.install();
+    await page.goto('https://example.com'); // countdown starts at 10
+
+    await page.clock.runFor('10'); //like countdown 10,9,8 -> 0
+    await page.clock.runFor('10:00'); // run for 10 minutes
+    await expect(page.getByText('0')).toBeVisible();
 })
