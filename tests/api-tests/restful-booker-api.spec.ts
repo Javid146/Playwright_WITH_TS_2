@@ -1,5 +1,5 @@
 import { test } from '../../fixtures/hooks-fixture';
-import { expect } from '@playwright/test';
+import { expect } from "@playwright/test";
 import apiPathData from "../../test-data/api-data/api-path-data.json"
 import restfulApiData from "../../test-data/api-data/restful-booker-api-module-data.json"
 
@@ -34,6 +34,113 @@ import restfulApiData from "../../test-data/api-data/restful-booker-api-module-d
 */
 
 
+/*
+1. async ({ request }) => {}:
+
+   Means: Extract ONLY the `request` property from the fixture object.
+   This JavaScript feature is called object destructuring (often called fixture destructuring in Playwright).
+
+   Think of Playwright as passing an object like this:
+
+   testContext = { //testContext is random name I chose for the entire fixture object
+     page,
+     request,
+     browser,
+     context
+   };
+
+   This is a simplified illustration of the built-in fixtures.
+
+   async ({ request }) => {}
+
+   is equivalent to:
+
+   async (fixtures) => {
+     const request = fixtures.request;
+   }
+
+   Here:
+   - `fixtures` is a parameter name I chose for the entire fixture object.
+   - `request` is a local variable that receives the value of the built-in request fixture.
+   - `page`, `context`, and `browser` are NOT extracted in the destructured version.
+
+   If I write:
+
+   async (fixtures) => {
+     fixtures.page;
+     fixtures.request;
+     fixtures.context;
+   }
+
+   I receive the entire fixture object and can access its properties.
+
+   IMPORTANT:
+   `fixtures` is NOT a built-in Playwright fixture.
+   It is just a parameter name chosen by the developer.
+   `page`, `request`, `context`, and `browser` are built-in fixture names.
+
+2. import { request } from '@playwright/test';
+
+   This `request` is DIFFERENT from the built-in `request` fixture.
+
+   The imported `request` is an APIRequest factory.
+   Calling request.newContext() creates a new APIRequestContext.
+
+   Example:
+   import { request } from '@playwright/test';
+
+   const reqContext = await request.newContext({
+     baseURL: 'https://restful-booker.herokuapp.com'
+   });
+
+   Now I can use:
+
+   reqContext.get()
+   reqContext.post()
+   reqContext.put()
+   reqContext.patch()
+   reqContext.delete()
+
+   By contrast, in:
+   test('API test', async ({ request }) => {
+     const response = await request.get('/booking');
+   });
+
+   `request` is the built-in APIRequestContext fixture provided by Playwright.
+   It is already created and ready to use, so I do NOT need to call newContext().
+
+   SUMMARY:
+
+   - import { request } from '@playwright/test'
+     -> APIRequest factory; use request.newContext() to create a context.
+
+   - async ({ request }) => {}
+     -> Extracts the built-in request fixture from the fixture object.
+
+   - async (fixtures) => {}
+     -> Receives the entire fixture object; access the request fixture using fixtures.request.
+
+   CAR ANALOGY:
+
+   const car = {
+     engine: 'V8',
+     wheels: 4,
+     gps: true
+   };
+
+   function drive(car) {
+     // car receives the entire object
+     console.log(car.engine);
+   }
+
+   function drive({ engine }) {
+     // engine receives only the engine property's value
+     console.log(engine);
+   }
+
+   This is the same object-destructuring principle used with Playwright fixtures.
+*/
+
 //CHECK DOCUMENTATION HERE: https://restful-booker.herokuapp.com/apidoc/index.html
 test('[ GET ALL BOOKINGS ] Verify that the user is able to fetch all the booking IDs using GET API and receive valid response', {
   tag: ["@api", "@uat"],
@@ -41,50 +148,7 @@ test('[ GET ALL BOOKINGS ] Verify that the user is able to fetch all the booking
     type: "Test Case Link",
     description: "https://dev.azure.com/wishinfinite/wishinfinite/_workitems/edit/8"
   },
-},
-  /*
-  { request } means Give me ONLY the request fixture from the full object. adding params in {} is called fixture destructuring.
-  
-    Think of Playwright like:
-    testContext = {
-    page,
-    request,
-    browser,
-    context
-  }
-  
-    async ({ request }) => {} gives only APIRequest context from testContext
-    async (request) => {} gives you entire test context object.
-  
-    if you do async ({ request }) => {}:
-    it is equivalent to:
-    test(async (fixtures) => {
-    fixtures.page
-    fixtures.request
-    fixtures.context
-  });
-  
-  👉 request here is just a variable name you chose
-  👉 it receives the entire test fixtures object. Which is incorrect saying “treat the whole fixtures object as a variable named request”.
-  
-  request fixture is just one property inside a shared test fixtures object (or test context). That's why we need to desctructure fixtures object and jsut fetch request using {}.
-  Think of it like:
-  
-  const car = {
-    engine,
-    wheels,
-    gps
-  };
-  
-  Then:
-  function drive(car) {}
-  
-  If you write:
-  function drive(engine) {}
-  You did NOT get engine — you got the whole car object.
-  */
-
-  async ({ request }) => {
+}, async ({ request }) => {
     const bookingIdsResp = await request.get(apiPathData.booking_path);
     const bookingIdsJsonResp = await bookingIdsResp.json();
     console.log(bookingIdsJsonResp);
@@ -101,7 +165,7 @@ test('[ GET ALL BOOKINGS ] Verify that the user is able to fetch all the booking
     1. Dot notation: obj.key
 
     Is good for simple keys (no symbols, no spaces).
-    Header names contain a dash -, which is not valid in dot notation. e.g. response.headers() returns:
+    Header names that contain a dash -, is not valid in dot notation. e.g. response.headers() returns:
     {
     "content-type": "application/json",
     "cache-control": "no-cache"
@@ -128,23 +192,27 @@ test('[ GET BOOKING ] Verify that the user is able to fetch booking details for 
  
   bookingIdsResp.text() -> returns raw response as a string: {"bookings":[1,2,3]}, not like a json object. 
   can manually convert it to json object: const data = JSON.parse(await bookingIdsResp.text())
+  const data = JSON.parse(await bookingIdsResp.text()); =   const data = await bookingIdsResp.json();
 
-  You can NOT do:
+  You can NOT do this because bookingIdsResp is a Response object, not a JSON object:
   bookingIdsResp.bookings ❌
   bookingIdsResp[0] ❌
 
-  const data = await bookingIdsResp.json(); -> converts:
+  const data = await bookingIdsResp.json();
+
+  .json() parses the JSON response body into a JavaScript value.
+
+  JSON response body:
   {
-  "bookings": [1, 2, 3]
+    "bookings": [1, 2, 3]
   }
 
-  into:
-
+  After parsing, `data` is a JavaScript object equivalent to:
   {
-  bookings: [1, 2, 3]
+    bookings: [1, 2, 3]
   }
 
-  Now you can:
+  Now you can access the array:
   console.log(data.bookings);
   expect(data.bookings.length).toBeGreaterThan(0);
   */
@@ -161,16 +229,68 @@ test('[ GET BOOKING ] Verify that the user is able to fetch booking details for 
 head: similar to get(), but faster and returns only headers, status and cookies; so can't do response.text() or response.json();
 good to check if resource exists. get() returns full page data.
 */
+
+
 test('[ HEAD ]', async ({ playwright }) => {
-  const apiContext = await playwright.request.newContext({ //playwright.request.newContext -> A standalone API client. Manual API client
+  // playwright is a built-in fixture that provides the Playwright API object.
+  // playwright.request.newContext() creates a new, standalone APIRequestContext.
+  const apiContext = await playwright.request.newContext({
     baseURL: 'https://example.com',
   });
 
-  const res = await apiContext.head('/file.pdf'); //apiContext can all so call get,post,put,patch,delete like request does.
+  // apiContext supports get, post, put, patch, delete, head, etc.
+  const res = await apiContext.head('/file.pdf');
+
   console.log(res.status());
+
+  // Dispose of the manually created context when finished.
   await apiContext.dispose();
 });
 
+
+/*
+The code below achieves the same purpose, but imports the request factory
+directly to create a new APIRequestContext.
+
+This allows you to create multiple independent API contexts with different
+baseURLs, headers, and other configuration options in the same test.
+
+import { request, type APIRequestContext } from '@playwright/test';
+
+test('[ HEAD ]', async () => {
+  const newContext: APIRequestContext = await request.newContext({
+    baseURL: 'https://google.com',
+  });
+
+  const res = await newContext.head('/file.pdf');
+  console.log(res.status());
+
+  await newContext.dispose();
+});
+
+
+BUILT-IN REQUEST FIXTURE:
+
+async ({ request }) => { ... }
+
+The request fixture is provided directly by Playwright Test.
+It is already an APIRequestContext, so you can send requests without
+creating another context or disposing of the fixture yourself.
+
+test('[ HEAD ]', async ({ request }) => {
+  const res = await request.head('https://example.com/file.pdf');
+  console.log(res.status());
+});
+
+IMPORTANT:
+- { request } and { playwright } are separate built-in fixtures.
+- playwright.request.newContext() creates a new APIRequestContext.
+- The imported request factory can also create a new APIRequestContext.
+- The built-in { request } fixture is already ready to use.
+*/
+
+
+ 
 
 test("[ POST ] Verify that the user is able to Create new booking using Post API and receive valid response.", {
   tag: ['@api', '@uat'],
@@ -238,6 +358,24 @@ test('[ PATCH ] Verify that the user is able to partially update existing bookin
     data: restfulApiData.update_booking_with_patch
   });
 
+  /*
+  console.log({ partialUpdateBookingJsonResp }):
+  - With curly bracesreates an object with a property named partialUpdateBookingJsonResp, whose value is the variable's value. The console displays something like:
+
+  {
+    partialUpdateBookingJsonResp: {
+      firstname: "John",
+      lastname: "Smith"
+    }}
+
+  - Without curly braces, it logs the value of the variable directly, without wrapping it in an object. The console displays something like:
+  {
+  "firstname": "John",
+  "lastname": "Smith"
+  }  
+  */
+
+
   const partialUpdateBookingJsonResp = await partialUpdateBookingResp.json();
   console.log({ partialUpdateBookingJsonResp })
   expect(partialUpdateBookingResp.status()).toBe(200);
@@ -268,14 +406,28 @@ test('[ DELETE ] Verify that the user is able to delete existing booking using D
 Delete request below using a custom APIRequestContext (playwright.newContext()).
 The tests above use the built-in `request` fixture ready to send requests, which is also an APIRequestContext managed by Playwright.
 
-Use a custom APIRequestContext (newContext) when you need isolation for:
+Use a custom APIRequestContext (newContext) when you need isolation (different api defined in config file) for:
 - cookies
 - headers
 - authentication state
 - separate session data
 
 This is useful when you want to avoid sharing state between tests or simulate multiple users.
+
+=================
+extraHTTPHeaders: means automatically attach these headers to every request made by this apiContext.
+equivalent to:
+  headers: {
+'cookie': `token=${apiToken}`
+}
+BUT with extraHTTPHeaders, you set it once for the whole context. So every request from this context will include given headers.
+
+=================
+cleanup. If you are using the Playwright built-in request fixture, like test('my test', async ({ request }): 
+then you do NOT need dispose() at all. Because request fixture is managed by Playwright
+await apiContext.dispose();
 */
+
 test('[ DELETE ] Verify that the user is able to delete existing booking using Delete API and receive valid response.', {
   tag: ['@api', '@uat'],
   annotation: {
@@ -289,15 +441,6 @@ test('[ DELETE ] Verify that the user is able to delete existing booking using D
   // create APIRequestContext manually
   const apiContext = await playwright.request.newContext({
     baseURL: process.env.API_BASE_URL,
-
-    /*
-    extraHTTPHeaders: means automatically attach these headers to every request made by this apiContext.
-    equivalent to:
-     headers: {
-    'cookie': `token=${apiToken}`
-    }
-    BUT with extraHTTPHeaders, you set it once for the whole context. So every request from this context will include given headers.
-    */
     extraHTTPHeaders: {
       'cookie': `token=${apiToken}`
     }
@@ -310,10 +453,6 @@ test('[ DELETE ] Verify that the user is able to delete existing booking using D
   expect(deleteBookingResp.status()).toBe(201);
   expect(deleteBookingResp.statusText()).toBe('Created');
 
-  /* 
-  cleanup. If you are using the Playwright built-in request fixture, like test('my test', async ({ request }): 
-  then you do NOT need dispose() at all. Because request fixture is managed by Playwright
-  */
   await apiContext.dispose();
 });
 
@@ -363,7 +502,7 @@ test('[ FETCH ] POST request (JSON body)', async ({ request }) => {
 });
 
 test('[ FETCH ] PUT request (update data)', async ({ request }) => {
-  //put
+
   const res = await request.fetch('https://example.com/api/users/1', {
     method: 'put',
     data: {
@@ -375,7 +514,7 @@ test('[ FETCH ] PUT request (update data)', async ({ request }) => {
 });
 
 test('[ FETCH ] DELETE request', async ({ request }) => {
-  //delete
+
   const res = await request.fetch('https://example.com/api/users/1', {
     method: 'delete',
   });
@@ -384,7 +523,7 @@ test('[ FETCH ] DELETE request', async ({ request }) => {
 });
 
 test('[ FETCH ] HEAD request (headers only)', async ({ request }) => {
-  //head
+
   const res = await request.fetch('https://example.com/file.pdf', {
     method: 'head',
   });
@@ -395,7 +534,7 @@ test('[ FETCH ] HEAD request (headers only)', async ({ request }) => {
 
 test('[ FETCH ] dynamic method use case', async ({ request }) => {
   //Useful when method comes from config / data / test input
-  const method = 'post'; // can be dynamic
+  const method = 'post'; // can be dynamic put, patch depending on data-driven test
 
   const res = await request.fetch('https://example.com/api/login', {
     method,
@@ -411,14 +550,13 @@ test('[ FETCH ] dynamic method use case', async ({ request }) => {
 test('[ FETCH ] multipart form-data upload', async ({ request }) => {
   //file upload
   const form = new FormData();
-  form.set('name', 'John');
+  form.set('name', 'John'); //value of form field: <input name="name" value="John">. not very important, just for demonstration.
   form.append(
-    'file',
-    new File(['hello'], 'hello.txt', { type: 'text/plain' })
+    'file', new File(['hello'], 'hello.txt', { type: 'text/plain' })
   );
 
   const res = await request.fetch('https://example.com/api/upload', {
-    multipart: form, //multipart = “send data as a form (like HTML form upload), including files” not as json
+    multipart: form //multipart = “send data as a form (like HTML form upload), including files” not as json
   });
 
   expect(res.ok()).toBeTruthy();
@@ -430,22 +568,19 @@ test('waitForRequest - verify API request is sent', async ({ page }) => {
   await page.goto('https://example.com');
 
   /**
-   * Start listening BEFORE the action happens.
-   * This ensures we don't miss fast network calls.
+   * Start listening BEFORE the action happens. This ensures we don't miss fast network calls.
    */
   const requestPromise = page.waitForRequest(request =>
     request.url().includes('/api/login') && request.method() === 'POST'
   );
 
   /**
-   * Trigger the action that causes the request.
-   * Example: user clicks login button.
+   * Trigger the action that causes the request. Example: user clicks login button.
    */
   await page.getByRole('button', { name: 'Login' }).click();
 
   /**
-   * Wait until the matching request is seen.
-   * This only confirms the request was sent, NOT that it succeeded.
+   * Wait until the matching request is seen. This only confirms the request was sent, NOT that it succeeded.
    */
   const request = await requestPromise;
   console.log('Request sent to:', request.url());
@@ -458,8 +593,7 @@ test('waitForResponse - verify API response is received', async ({ page }) => {
   await page.goto('https://example.com');
 
   /**
-   * Start waiting for the API response BEFORE triggering the action.
-   * This listens for the server response, not just the request.
+   * Start waiting for the API response BEFORE triggering the action. This listens for the server response, not just the request.
    */
   const responsePromise = page.waitForResponse(response =>
     response.url().includes('/api/login') && response.status() === 200
@@ -471,8 +605,7 @@ test('waitForResponse - verify API response is received', async ({ page }) => {
   await page.getByRole('button', { name: 'Login' }).click();
 
   /**
-   * Wait for the server response to come back.
-   * This confirms:
+   * Wait for the server response to come back. This confirms:
    * - request was sent, server responded
    * - response status is OK
    */
@@ -484,12 +617,13 @@ test('waitForResponse - verify API response is received', async ({ page }) => {
 
 test('request.failure() example', async ({ page }) => {
   /**
-   * request.failure()
-   *
-   * - Works only for failed network requests.
-   * - Returns:
-   *     null              -> request succeeded
+   * request.failure():
+   * Works only for failed network requests. Returns:
+   *     null              -> request succeeded or does it does not have failure description
    *    { errorText: ... } -> request failed
+   * 
+   * null does not mean the request succeeded in every context. It means there is no failure description available. 
+   * Inside a requestfailed event handler, the request has failed, but the failure details may be unavailable.
    */
 
   let failedRequestCaptured = false;
@@ -530,71 +664,62 @@ test('capture login API request payload (no UI)', async ({ page }) => {
   let capturedBody: string | null = null;
 
   /*
-   * page.route() intercepts network requests BEFORE they are sent to the server.
-   *
-   * Pattern "** /api/login" means:
-   * - match any domain and any path ending with ** /api/login
-   * This allows us to inspect, modify, block, or mock requests.
-   */
-  await page.route('**/api/login', async route => {
-
-    /**
-     * route.request() -> allows inspecting the network layer behind UI actions.
-     * 
-     * Gives access to the actual Request object (headers, URL, body, etc.)
-     * it lets you inspect what the frontend is actually sending. e.g.:
-     * {
-      "username": "testUser",
-      "password": "testPass123"
-      }
+  ================
+1. set up interception BEFORE triggering the request. This ensures we don't miss fast network calls.
+  * page.route() intercepts network requests BEFORE they are sent to the server.
+  *
+  * Pattern "** /api/login" means:
+  * - match any domain and any path ending with ** /api/login. This allows us to inspect, modify, block, or mock requests.
+   ===============
+  rouuute.request():
+  * allows inspecting the network layer behind UI actions.
+  * Gives access to the actual Request object (headers, URL, body, etc.) it lets you inspect what the frontend is actually sending.
+  ===============
+  * rouuute.continue():
+    Without this, the request would be blocked/stopped here.
+  * continue() means: Send the request to the real server as normal, unchanged." You can think of it as: intercept → inspect → forward request
      */
-    const request = route.request();
+  await page.route('**/api/login', async rouuute => {
+
+    const request = rouuute.request();
 
     console.log('URL:', request.url());
     console.log('Method:', request.method());
     console.log('Headers:', request.headers());
     /**
-     * request.postData()
-     * Extracts the request body (payload) sent in POST request.
-     * Returns string or null (if no body exists).
-     */
+     * request.postData(): Extracts the request body (payload) sent in POST request. Returns string or null (if no body exists).
+     */ 
     capturedBody = request.postData();
     console.log('Captured login request:', capturedBody);
 
-    /**
-     * route.continue()
-     * IMPORTANT: Without this, the request would be blocked/stopped here.
-     *
-     * continue() means:
-     * "Send the request to the real server as normal, unchanged."
-     *
-     * You can think of it as:
-     * → intercept → inspect → forward request
-     */
-    await route.continue();
+    await rouuute.continue();
   });
 
-  /**
-   * Trigger a network request WITHOUT UI interaction.
-   * This simulates frontend behavior using fetch().
-   * 
-   * we don't use data, but body instead for payload, because page.evaluate means code runs in browser context not in nodejs. This IS a real HTTP request.
-   * So it behaves like: a real user clicking UI and frontend JavaScript calling backend.
-   * and http request cannot send body as object. if we do not stringify call fails.
-   * Why JSON.stringify is needed?
 
-    It converts:
-    {
-      username: 'testUser',
-      password: 'testPass123'
-    }
+/**
+ * Trigger a network request WITHOUT UI interaction. This uses fetch() inside the browser to send a real HTTP request.
+ *
+ * page.evaluate():
+ * - runs the callback in the browser context, not in Node.js. The request follows browser networking rules and can use applicable browser cookies.
+ * - tells Playwright to execute JavaScript inside the browser page. Inside that JavaScript, you can use fetch() to send different types of HTTP requests.
+ * The Fetch API's body does not accept a plain JavaScript object directly as JSON. JSON.stringify() converts the object into a JSON string.
+ *
+ * =================================
+ * Browser fetch() vs Playwright request.fetch()
+ * =================================
+ * 1. fetch() inside page.evaluate():
+ *    - Runs in the browser.
+ *    - Follows browser networking rules.
+ *    - Can use applicable browser cookies.
+ *    - Use body: JSON.stringify(object) to send JSON.
+ *
+ * 2. Playwright request.fetch():
+ *    - Runs from the Node.js test side, not inside the browser.
+ *    - Can send API requests without UI interaction or page navigation.
+ *    - Playwright can serialize an object passed through the data option
+ *      as JSON, so JSON.stringify() is usually unnecessary.
+ */
 
-    into a string:
-    {"username":"testUser","password":"testPass123"}
-
-    🧠 2. request.fetch() in Playwright is ALSO a real HTTP request. But different layer:
-    👉 It is sent from Node.js (server-side test context), NOT from browser.
-   */
   await page.evaluate(() => {
     fetch('/api/login', {
       method: 'POST',
@@ -617,19 +742,12 @@ test('mock login API using route.fulfill()', async ({ page }) => {
   /**
    * page.route() -> You’re testing UI behavior under controlled API conditions, not the real backend.
    * Intercepts browser network requests BEFORE they reach backend.
-   *
-   * Any frontend request to:
-   *    /api/login
-   *
-   * will be intercepted by Playwright.
+   * Any frontend request to: /api/login will be intercepted by Playwright.
    */
   await page.route('**/api/login', async route => {
 
     /**
-     * route.fulfill()
-     *
-     * Instead of contacting real backend, Playwright returns fake response immediately.
-     * Frontend thinks this is a real server response.
+     * route.fulfill(): Instead of contacting real backend, Playwright returns fake response immediately. Frontend thinks this is a real server response.
      */
     await route.fulfill({
       status: 200,
@@ -650,16 +768,13 @@ test('mock login API using route.fulfill()', async ({ page }) => {
   await page.fill('#password', 'testPass');
 
   /**
-   * Click login button
-   * Frontend will internally do something like:
-   * fetch('/api/login')
+   * Click login button. Frontend will internally do something like: fetch('/api/login')
    * That request gets intercepted by page.route().
    */
   await page.click('button[type="submit"]');
 
   /**
-   * UI assertion:
-   * Since mocked API returned: { success: true }, frontend should show successful login state.
+   * UI assertion: Since mocked API returned: { success: true }, frontend should show successful login state.
    */
   await expect(page.locator('text=Logged in!')).toBeVisible();
 });
@@ -674,38 +789,42 @@ test('login via UI then use authenticated page.request', async ({ page }) => {
   await page.fill('#username', 'testUser');
   await page.fill('#password', 'testPass123');
   await page.click('button[type="submit"]');
-
-  // Verify UI login succeeded
   await expect(page.locator('text=Logged in!')).toBeVisible();
+  
+/**
+ * 2. UI login has completed, so the browser context may now contain
+ * authentication cookies or other session data.
+ *
+ * WHY use page.request.get()?
+ * - Sends an API request from Playwright's Node.js side.
+ * - No UI interaction is needed to send the API request.
+ * - No JavaScript execution inside the browser is needed (unlike page.evaluate()).
+ * - Shares cookies with the associated browser context, so the API request can use the cookie-based session established by UI login.
+ *
+ * IMPORTANT:
+ * - page.request does NOT automatically send localStorage tokens as API headers.
+ *   If authentication relies on a token stored in localStorage, extract the token and add it to the request headers when needed.
+ * - GET /api/profile checks whether the API recognizes the if user logged in and is in profile.
+ *
+ * WHY use page.request instead of the built-in { request } fixture?
+ *
+ * page.request:
+ * - Associated with the page's browser context.
+ * - Shares cookies with that browser context.
+ * - Useful for API calls that need the browser's cookie-based session.
+ *
+ * Built-in { request } fixture:
+ * - Provides a separate APIRequestContext by default.
+ * - Does not automatically share the browser context's cookies.
+ * - Useful for independent API calls with separately configured authentication headers or other credentials.
+ *
+ * SIMPLE RULE:
+ * Use { request }  -> independent API requests with their own authentication setup.
+ * Use page.request -> API requests that need the browser context's cookies. page.request itself does not perform UI interaction. 
+ * You use the UI to log in first, then make an API call using the existing cookie-based session. You don't need to log in again through the API.
+ */
 
-  /**
-   * 2. NOW session is authenticated via UI (in browser context), so browser bound api request on Node.js side via page.request will work.
-   * (cookies / localStorage already set by UI login)
-   *
-   * WHY we use: page.request.get() ?
-   * 
-   * - This sends an API request directly from Playwright (Node.js side)
-   * - No UI interaction needed
-   * - No browser execution needed (unlike page.evaluate)
-   *
-   * This simulates calling the login API
-   * why we don't use request.post instead of page.request.post() ?
-   * Because page.request is:
-  
-    Bound to the same browser context
-    Shares:
-    cookies, storage state
-    Useful when your API depends on logged-in session state in the browser
-  
-    Whereas global request:
-    Is completely separate
-    No cookies unless manually injected
-    More “pure API testing tool”
-  
-    Simple rule:
-    Use request → pure API tests (no browser dependency)
-    Use page.request → API calls that must match browser session state
-   */
+//Use the browser context's session cookies automatically to verify user is logged in and is on profile.
   const response = await page.request.get('/api/profile');
   expect(response.status()).toBe(200);
   const body = await response.json();

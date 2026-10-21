@@ -38,6 +38,7 @@ export const test = baseTest.extend<pomFixtureType>({
     }
 })
 
+
 /*
    We use Playwright fixtures to centralize and manage test dependencies such as page objects,
    API clients, utilities, and setup/teardown logic.
