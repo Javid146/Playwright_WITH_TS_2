@@ -30,12 +30,8 @@ test('expect configure', async ({ page }) => {
 
 /*
 This setup combines custom fixtures and custom matchers from multiple modules.
-
-- mergeTests() merges different `test` objects, including their fixtures,
-  hooks, and configurations, into a single unified test instance.
-
-- mergeExpects() merges custom matchers so they can be used together
-  with a single `expect`.
+- mergeTests() merges different `test` objects, including their fixtures, hooks, and configurations, into a single unified test instance.
+- mergeExpects() merges custom matchers so they can be used together with a single `expect`.
 
 In this example:
 - `dbTest` provides a `database` fixture
@@ -52,12 +48,26 @@ test('passes', async ({ database }) => {
 
 fixtures.ts:
 import { mergeTests, mergeExpects } from '@playwright/test';
-import { test as dbTest, expect as dbExpect } from 'database-test-utils';
-import { test as a11yTest, expect as a11yExpect } from 'a11y-test-utils';
 
-There is no practical built-in limit in Playwright. You can merge as many mergeExpects and mergeTests as you need.
-export const expect = mergeExpects(dbExpect, a11yExpect);
-export const test = mergeTests(dbTest, a11yTest);
+import { test as dbTest, expect as dbExpect } from './database-fixtures';
+import { test as apiTest, expect as apiExpect } from './api-fixtures';
+import { test as authTest, expect as authExpect } from './auth-fixtures';
+import { test as paymentTest, expect as paymentExpect } from './payment-fixtures';
+
+export const test = mergeTests(
+    dbTest,
+    apiTest,
+    authTest,
+    paymentTest
+);
+
+export const expect = mergeExpects(
+    dbExpect,
+    apiExpect,
+    authExpect,
+    paymentExpect
+);
+
 
 dbTest.spec.ts:
 import { test, expect } from './fixtures';
@@ -105,7 +115,8 @@ test('toHaveCSS()', async ({ page }) => {
     await expect(locator).toHaveCSS('display', 'flex');
 })
 
-
+//toHaveJSProperty() checks the current JavaScript property value of the DOM element, not the original HTML attribute.
+//DOM means Document Object Model. It's a programming representation of an HTML page as a tree of objects (nodes), which JavaScript can access and modify.
 test('toHaveJSProperty()', async ({ page }) => {
 
     const locator = page.getByRole('button');
@@ -119,20 +130,26 @@ test('toHaveJSProperty()', async ({ page }) => {
 test('toHaveProperty()', async ({ }) => {
     const value = {
         a: {
-            b: [42],
+            b: [42, 43],
         },
         c: true,
     };
+
     expect(value).toHaveProperty('a.b');
-    expect(value).toHaveProperty('a.b', [42]);
+    expect(value).toHaveProperty('a.b', [42, 43]);
     expect(value).toHaveProperty('a.b[0]', 42);
     expect(value).toHaveProperty('c');
     expect(value).toHaveProperty('c', true);
 })
 
-
+//toHaveValue() checks the current value of a form element, such as an input, textarea, or select.
 test('toHaveValue()', async ({ page }) => {
-    // for input, textarea and select tags
-    const locator = page.getByRole('button');
-    await expect(locator).toHaveValue('test@mail.com');
+    const email = page.locator('input[type="email"]');
+    await expect(email).toHaveValue('test@mail.com');
+
+    const message = page.locator('textarea');
+    await expect(message).toHaveValue('Hello, how are you?');
+
+    const country = page.locator('select');
+    await expect(country).toHaveValue('usa');
 })

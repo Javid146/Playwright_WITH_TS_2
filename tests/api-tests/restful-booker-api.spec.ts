@@ -11,16 +11,14 @@ import restfulApiData from "../../test-data/api-data/restful-booker-api-module-d
       extraHTTPHeaders: { Accept: 'application/json' }
 
   - API_BASE_URL is defined in env files. We have two environments: demo and dev.
-    For practice, only the demo env has a valid URL. 
-    This ensures that all tests (script or CLI) run against the demo environment.
+    For practice, only the demo env has a valid URL. This ensures that all tests (script or CLI) run against the demo environment.
 
   - API tests are configured in a separate project in playwright.config.ts:
       {
         name: 'APITest',
         testDir: './tests/api-tests'
       }
-    This directs Playwright to the API test folder and avoids launching any browser.
-    No device lines are needed since these are API-only tests.
+    This directs Playwright to the API test folder and avoids launching any browser. No device lines are needed since these are API-only tests.
 
   How to run:
 
@@ -62,7 +60,7 @@ import restfulApiData from "../../test-data/api-data/restful-booker-api-module-d
    Here:
    - `fixtures` is a parameter name I chose for the entire fixture object.
    - `request` is a local variable that receives the value of the built-in request fixture.
-   - `page`, `context`, and `browser` are NOT extracted in the destructured version.
+   - `page`, `context`, and `browser` are NOT extracted in the destructured version only request is extracted from the fixture object.
 
    If I write:
 
@@ -79,12 +77,9 @@ import restfulApiData from "../../test-data/api-data/restful-booker-api-module-d
    It is just a parameter name chosen by the developer.
    `page`, `request`, `context`, and `browser` are built-in fixture names.
 
-2. import { request } from '@playwright/test';
-
+2. import { request } from '@playwright/test':
    This `request` is DIFFERENT from the built-in `request` fixture.
-
-   The imported `request` is an APIRequest factory.
-   Calling request.newContext() creates a new APIRequestContext.
+   The imported `request` is an APIRequest factory. Calling request.newContext() creates a new APIRequestContext.
 
    Example:
    import { request } from '@playwright/test';
@@ -192,7 +187,7 @@ test('[ GET BOOKING ] Verify that the user is able to fetch booking details for 
  
   bookingIdsResp.text() -> returns raw response as a string: {"bookings":[1,2,3]}, not like a json object. 
   can manually convert it to json object: const data = JSON.parse(await bookingIdsResp.text())
-  const data = JSON.parse(await bookingIdsResp.text()); =   const data = await bookingIdsResp.json();
+  const data = JSON.parse(await bookingIdsResp.text()); =  const data = await bookingIdsResp.json();
 
   You can NOT do this because bookingIdsResp is a Response object, not a JSON object:
   bookingIdsResp.bookings ❌
@@ -249,11 +244,8 @@ test('[ HEAD ]', async ({ playwright }) => {
 
 
 /*
-The code below achieves the same purpose, but imports the request factory
-directly to create a new APIRequestContext.
-
-This allows you to create multiple independent API contexts with different
-baseURLs, headers, and other configuration options in the same test.
+The code below achieves the same purpose, but imports the request factory directly to create a new APIRequestContext.
+This allows you to create multiple independent API contexts with different baseURLs, headers, and other configuration options in the same test.
 
 import { request, type APIRequestContext } from '@playwright/test';
 
@@ -273,8 +265,7 @@ BUILT-IN REQUEST FIXTURE:
 
 async ({ request }) => { ... }
 
-The request fixture is provided directly by Playwright Test.
-It is already an APIRequestContext, so you can send requests without
+The request fixture is provided directly by Playwright Test. It is already an APIRequestContext, so you can send requests without
 creating another context or disposing of the fixture yourself.
 
 test('[ HEAD ]', async ({ request }) => {
@@ -289,8 +280,6 @@ IMPORTANT:
 - The built-in { request } fixture is already ready to use.
 */
 
-
- 
 
 test("[ POST ] Verify that the user is able to Create new booking using Post API and receive valid response.", {
   tag: ['@api', '@uat'],
@@ -360,7 +349,7 @@ test('[ PATCH ] Verify that the user is able to partially update existing bookin
 
   /*
   console.log({ partialUpdateBookingJsonResp }):
-  - With curly bracesreates an object with a property named partialUpdateBookingJsonResp, whose value is the variable's value. The console displays something like:
+  - log with curly braces creates an object with a property named partialUpdateBookingJsonResp, whose value is the variable's value. The console displays something like:
 
   {
     partialUpdateBookingJsonResp: {
@@ -405,7 +394,6 @@ test('[ DELETE ] Verify that the user is able to delete existing booking using D
 /*
 Delete request below using a custom APIRequestContext (playwright.newContext()).
 The tests above use the built-in `request` fixture ready to send requests, which is also an APIRequestContext managed by Playwright.
-
 Use a custom APIRequestContext (newContext) when you need isolation (different api defined in config file) for:
 - cookies
 - headers
@@ -792,8 +780,7 @@ test('login via UI then use authenticated page.request', async ({ page }) => {
   await expect(page.locator('text=Logged in!')).toBeVisible();
   
 /**
- * 2. UI login has completed, so the browser context may now contain
- * authentication cookies or other session data.
+ * 2. UI login has completed, so the browser context may now contain authentication cookies or other session data.
  *
  * WHY use page.request.get()?
  * - Sends an API request from Playwright's Node.js side.
